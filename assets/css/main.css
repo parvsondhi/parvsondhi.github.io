@@ -2465,18 +2465,18 @@
 	#header {
 		background-color: #000000;
 		background-attachment: scroll,								fixed;
-		background-image: url("images/overlay.png"), url("../../images/bg2.jpg");
+		background-image: url("images/overlay.png"), url("../../images/bg7.gif");
 		background-position: top left,							top left;
 		background-repeat: repeat,								no-repeat;
 		background-size: auto,								auto 100%;
 		color: rgba(255, 255, 255, 0.5);
 		height: 100%;
 		left: 0;
-		padding: 4em 4em 0 0;
+		padding: 4em 1em 0 0;
 		position: fixed;
 		text-align: right;
 		top: 0;
-		width: 35%;
+		width: 30%;
 	}
 
 		#header strong, #header b {
