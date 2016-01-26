@@ -2465,7 +2465,7 @@
 	#header {
 		background-color: #000000;
 		background-attachment: scroll,								fixed;
-		background-image: url("images/overlay.png"), url("../../images/bg_cr.gif");
+		background-image: url("images/overlay.png"), url("../../images/bgres.png");
 		background-position: top left,							top left;
 		background-repeat: repeat,								repeat;
 		background-size: auto,								auto 100%;
