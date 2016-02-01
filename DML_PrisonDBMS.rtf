@@ -1,0 +1,272 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf340
+{\fonttbl\f0\froman\fcharset0 TimesNewRomanPSMT;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+
+\f0\b\fs28 \cf0 1. CREATE A TRIGGER TO ASSIGN A CELL NUMBER TO A  PRISONER.\
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+
+\b0 \cf0 \
+CREATE OR REPLACE TRIGGER check_capacity\
+BEFORE INSERT ON prisoner\
+FOR EACH ROW\
+DECLARE\
+cap cell.capacity%type;\
+id cell.cellid%type;\
+BEGIN\
+SELECT capacity,cellid INTO cap,id \
+FROM cell;\
+IF cap>=1 THEN\
+UPDATE prisoner\
+SET cellid:=id;\
+UPDATE cell\
+SET capacity:=capacity-1;\
+END IF;\
+END;\
+\pard\pardeftab720\ri0\partightenfactor0
+
+\fs24 \cf0 \
+\pard\pardeftab720\ri0\partightenfactor0
+
+\fs28 \cf0 \
+\
+\
+\
+\
+\
+\pard\pardeftab720\ri0\partightenfactor0
+
+\b \cf0 2. CREATE A TRIGGER TO CHECK WHETHER A VISITOR IS PERMITTED TO MEET THE PRISONER OR NOT.
+\b0 \
+\
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+\cf0 CREATE OR REPLACE TRIGGER check_meeting\
+BEFORE UPDATE ON visitors\
+FOR EACH ROW\
+DECLARE\
+dv visitors.last_visit%type;\
+BEGIN\
+SELECT last_visit INTO dv \
+FROM visitors;\
+IF SYSDATE-dv>7 THEN\
+UPDATE visitors\
+SET last_visit:=SYSDATE;\
+ELSE\
+dbms_output.put_line(\'91 you are not allowed to meet as visitors are allowed only once a week\'92);\
+END IF;\
+END;\
+\pard\pardeftab720\ri0\partightenfactor0
+
+\fs24 \cf0 \
+\pard\pardeftab720\ri0\partightenfactor0
+
+\b\fs28 \cf0 \
+\
+\
+3. CREATE A TRIGGER TO ENTER THE WAGES OF A PRISONER FOR  WORKING.
+\b0 \
+ \
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+\cf0 CREATE OR REPLACE TRIGGER wages\
+AFTER INSERT ON prison industry\
+FOR EACH ROW\
+DECLARE\
+hrs prison industry.Pi-hours%type;\
+BEGIN\
+SELECT Pi-hours INTO hrs \
+FROM prison industry;\
+UPDATE prisoner industry\
+SET Pi-wages:=hrs*20;\
+END IF;\
+END;\
+\
+\
+\pard\pardeftab720\ri0\partightenfactor0
+
+\b \cf0 4. CREATE A PROCEDURE TO DISPLAY THE CELL GIVEN TO A PRISONER ALONG WITH HIS NAME AND ID.
+\b0 \
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+\cf0 \
+CREATE OR REPLACE PROCEDURE cellchk(cel IN NUMBER)\
+IS\
+CURSOR rec IS\
+SELECT pid, pname FROM prisoner \
+WHERE pid IN (SELECT pid FROM imprisoned WHERE cellid=cel);\
+BEGIN\
+FOR recs IN rec\
+LOOP\
+dbms_output.put_line('THE CELLID IS' || CEL || 'THE ID IS' || recs.PID || 'THE NAME IS' || recs.PNAME);\
+END LOOP;\
+END;\
+\pard\pardeftab720\ri0\partightenfactor0
+
+\b \cf0 \
+\
+\
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+\cf0 5.CREATE A PROCEDURE TO DELETE A RECORD FOR THAT PRISON WHO IS RELEASED.\
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+
+\b0 \cf0 CREATE  OR REPLACE PROCEDURE chk_imprisonment()\
+AS \
+CURSOR c1 IS SELECT * FROM imprisoned;\
+BEGIN\
+FOR rec IN c1\
+LOOP\
+IF rec.due_date < SYSDATE THEN\
+DELETE FROM imprisoned\
+WHERE pid=rec.pid;\
+\
+DELETE FROM works_at_pi\
+WHERE pid=rec.pid;\
+\
+DELETE FROM prisoner\
+WHERE pid=rec.pid;\
+\
+DELETE FROM prisonIND\
+WHERE pid=rec.pid;\
+\
+DELETE FROM visitoR\
+WHERE pid=rec.pid;\
+END IF;\
+END LOOP;\
+END;\
+\
+\pard\pardeftab720\ri0\partightenfactor0
+
+\b \cf0 \
+6. CREATE A PROCEDURE TO DIPLAY THE DESCRIPTION OF CHARGES IMPOSED ON PRISONER.
+\b0 \
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+\cf0 \
+CREATE OR REPLACE PROCEDURE description()\
+IS\
+CURSOR rec IS\
+SELECT * FROM charges files;\
+BEGIN\
+FOR recs IN rec\
+LOOP\
+dbms_output.put_line(recs.ptype || '             '|| recs.description);\
+END LOOP;\
+END;\
+\
+\pard\pardeftab720\ri0\partightenfactor0
+
+\b \cf0 7. CREATE A PROCEDURE TO DIPLAY WHETHER THE PRISONER HAS ANY PREVIOUS CHARGES IMPOSED ON HIM OR NOT.
+\b0 \
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+\cf0 \
+CREATE OR REPLACE PROCEDURE prev (pi IN NUMBER)\
+IS\
+CURSOR rec IS\
+SELECT * FROM previos charges \
+WHERE pid = pi;\
+BEGIN\
+FOR recs IN rec \
+LOOP\
+dbms_output.put_line('THE ID IS' || recs.PID || ' THE PREVIOUS JAILTIME WAS ' || recs.JAILTIME);\
+END LOOP;\
+END;\
+\
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+
+\b \cf0 8.CREATE A PROCEDURE TO CHECK NAME OF GUARDS,WARDEN ASSIGNED TO PRISONER\
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+
+\b0 \cf0 CREATE OR REPLACE PROCEDURE chk_name (id IN NUMBER)\
+IS\
+cid NUMBER;\
+wid NUMBER;\
+gaid NUMBER;\
+piid NUMBER;\
+CURSOR record IS\
+SELECT c.cellid, c.wardid, c.gid, p.pid INTO cid, wid , gaid , piid \
+FROM cells c, prisoners p \
+WHERE p.pid = id;\
+BEGIN\
+FOR recs IN record \
+LOOP\
+dbms_output.put_line('THE ID IS' || recs.piid || ' GUARD ID ' || recs.gaid || ' CELL ID ' || recs.cid || 'WARD ID ' || recs.wid);\
+END LOOP;\
+END;\
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+
+\b \cf0 \
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+
+\b0 \cf0 \
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+
+\b \cf0 9.CREATE A PROCEDURE TO CHECK WHETHER THE PRISONER IS  \
+IN CATEGORY GENERAL, SOLITARY CONFINEMENT OR PSICIATRIC
+\b0\fs18 \
+
+\b\fs28  \
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+
+\b0 \cf0 CREATE OR REPLACE PROCEDURE chk_category (id IN NUMBER)\
+IS\
+wtype VARCHAR(20);\
+piid NUMBER; \
+CURSOR record IS\
+SELECT w.wardtype , p.pid INTO wtype, piid\
+FROM ward w, prisoner p\
+WHERE p.pid = id;\
+BEGIN\
+FOR recs IN record \
+LOOP\
+dbms_output.put_line('THE ID IS' || recs.piid || 'AND PRISONER IS IN CATEGORY ' || recs.wtype );\
+END LOOP;\
+END;\
+\
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+
+\b \cf0 10.CREATE A PROCEDURE TO DISPLAY THE BASIC AMINITIES PROVIDED IN THE CELL TO A PRISONER
+\b0\fs18 \
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+
+\fs28 \cf0 \
+CREATE OR REPLACE PROCEDURE basic (cid IN NUMBER)\
+IS\
+id NUMBER; \
+name VARCHAR(20);\
+CURSOR record IS\
+SELECT a.amname , a.amid INTO name, id\
+FROM aminities a, cell c\
+WHERE c.cellid = cid;\
+BEGIN\
+FOR recs IN record \
+LOOP\
+dbms_output.put_line('THE CELL ID IS' || recs.cellid || 'AND BASIC AMINITIES ARE ' || recs.name || \'91     \'91 || recs.id );\
+END LOOP;\
+END;\
+\
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+
+\b \cf0 11.CREATE A PROCEDURE TO DISPLAY THE DETAILS OF THE WARD AND THE WARDEN OF THAT WARD IN WHICH  A PARTICULAR CELL IS LOCATED.
+\b0\fs18 \
+\pard\pardeftab720\ri0\sl360\slmult1\partightenfactor0
+
+\fs28 \cf0 \
+CREATE OR REPLACE PROCEDURE CELL_WARD (cid IN NUMBER)\
+IS\
+w_id  WARDS.WARDID%TYPE;\
+w_name WARDEN.ENAME%TYPE;\
+CURSOR  w_cur  IS SELECT *  FROM wards;\
+BEGIN\
+SELECT wardid INTO w_id  \
+FROM cells\
+WHERE cellid=cid;\
+FOR w_rec IN w_cur \
+LOOP\
+IF w_rec.wardid=w_id THEN\
+SELECT ename INTO w_name  FROM  warden \
+WHERE wardenid=w_rec.wardenid;\
+\
+dbms_output.put_line('THE CELL ID ' || cid ||'IS IN WARD' || w_rec.wardid ||'LOCATED IN '||w_rec.wardloc||' HAVIN WARDEN '||w_name);  \
+END IF;\
+END LOOP;\
+END;\
+}
